@@ -13,7 +13,14 @@ led_pins = [
     board.IO21,
     board.IO26, # type: ignore
     board.IO47,
-    # do the rest...
+    board.IO33, # type: ignore
+    board.IO34, #type: ignore
+    board.IO48,
+    board.IO35,
+    board.IO36,
+    board.IO37,
+    board.IO38,
+    board.IO39
 ]
 
 leds = [DigitalInOut(pin) for pin in led_pins]
@@ -22,16 +29,31 @@ for led in leds:
     led.direction = Direction.OUTPUT
 
 # main loop
+previous_volume = 0
+fall_rate = 500
+ambient_volume = 22000
+sensitivity = 5
+
 while True:
     volume = microphone.value
+    max_volume = 50000
 
-    print(volume)
+    adjusted_volume = max(0, volume - ambient_volume) * sensitivity
 
-    leds[0].value = not leds[0].value
-    leds[1].value = not leds[0].value
+    print(adjusted_volume)
 
-    sleep(1)
+    if adjusted_volume > previous_volume:
+        display_volume = adjusted_volume
+    else:
+        display_volume = max(0, previous_volume - fall_rate)
 
-    # instead of blinking,
-    # how can you make the LEDs
-    # turn on like a volume meter?
+    print(display_volume)
+
+
+    for i in range(len(leds)):
+        if adjusted_volume > i * max_volume / len(leds):
+            leds[i].value = 1
+        else:
+            leds[i].value = 0
+
+    sleep(0.1)
